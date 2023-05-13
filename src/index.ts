@@ -3,21 +3,34 @@ import * as dotenv from 'dotenv';
 import cron from 'node-cron';
 import chalk from 'chalk';
 import puppeteer from 'puppeteer';
-import * as importReadline from 'readline';
 dotenv.config();
+import express from 'express';
+const app = express();
+app.use(express.json()); // Middleware to parse JSON request bodies
+
+let code: string;
+
+app.post('/code', (req: any, res: any) => {
+  code = req.body.code;
+  res.send('Code received');
+});
+
+app.listen(3000);
+
+cron.schedule(`0 12 * * *`, async () => {
+  console.log(chalk.bold('Cron task initiated'));
+  run();
+});
 
 const GITHUB_LOGIN_URL = `${process.env.GITHUB_URL!}/login`;
 const GITHUB_REPO_URL = `${process.env.GITHUB_URL!}/${process.env
   .GITHUB_USERNAME!}/${process.env.GITHUB_REPO!}/new/main`;
 
 async function auth() {
-  const readline = importReadline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
+  // remove readline related code
 
   const browser = await puppeteer.launch({
-    headless: 'new',
+    headless: false,
     slowMo: 250,
     args: ['--no-sandbox'],
   });
@@ -34,21 +47,18 @@ async function auth() {
     page.click('input[type="submit"]'),
   ]);
 
-  let code: string = await new Promise((resolve) => {
-    readline.question('Code: ', (codeInput) => {
-      resolve(codeInput);
-      readline.close();
-    });
+  await new Promise((resolve) => {
+    setTimeout(() => {
+      resolve('Promise resolved');
+    }, 30000);
   });
 
+  // use the code received from the POST request
   await page.keyboard.type(code, { delay: 100 });
 
-  await Promise.all([
-    page.waitForNavigation(),
-    page.click('button[type="submit"]'),
-  ]);
+  await page.click('button[type="submit"]');
 
-  run();
+  await browser.close();
 }
 
 async function run() {
@@ -108,10 +118,6 @@ async function run() {
   await browser.close();
 }
 
-auth().catch(console.error);
-console.log('STARTED');
-
-// cron.schedule(`0 12 * * *`, async () => {
-//   console.log(chalk.bold('Cron task initiated'));
-//   run();
-// });
+auth()
+  .then(() => run())
+  .catch(console.error);
