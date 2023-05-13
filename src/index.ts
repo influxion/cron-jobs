@@ -17,7 +17,7 @@ async function auth() {
   });
 
   const browser = await puppeteer.launch({
-    headless: false,
+    headless: 'new',
     slowMo: 250,
     args: ['--no-sandbox'],
   });
