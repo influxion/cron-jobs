@@ -15,7 +15,7 @@ app.post('/code', (req: any, res: any) => {
   res.send('Code received');
 });
 
-app.listen(3000);
+app.listen(80);
 
 cron.schedule(`0 12 * * *`, async () => {
   console.log(chalk.bold('Cron task initiated'));
@@ -48,10 +48,13 @@ async function auth() {
   ]);
 
   await new Promise((resolve) => {
-    setTimeout(() => {
-      resolve('Promise resolved');
-    }, 30000);
-  });
+    const intervalId = setInterval(() => {
+      if (code !== undefined) {
+        resolve('Variable is set!');
+        clearInterval(intervalId);
+      }
+    }, 1000);
+  }).then(console.log);
 
   // use the code received from the POST request
   await page.keyboard.type(code, { delay: 100 });
