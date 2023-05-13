@@ -4,7 +4,6 @@
   "license": "MIT",
   "author": "Faraz Patankar",
   "main": "dist/index.js",
-  "type": "module",
   "module": "dist/cron-service.esm.js",
   "typings": "dist/index.d.ts",
   "files": [
