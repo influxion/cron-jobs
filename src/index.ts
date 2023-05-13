@@ -5,17 +5,6 @@ import chalk from 'chalk';
 import puppeteer from 'puppeteer';
 dotenv.config();
 import express from 'express';
-const app = express();
-app.use(express.json()); // Middleware to parse JSON request bodies
-
-let code: string = '666666';
-
-app.post('/code', (req: any, res: any) => {
-  code = req.body.code;
-  res.send('Code received');
-});
-
-app.listen(80);
 
 cron.schedule(`0 12 * * *`, async () => {
   console.log(chalk.bold('Cron task initiated'));
@@ -46,17 +35,71 @@ async function auth() {
   ]);
   // remove readline related code
 
-  // await new Promise((resolve) => {
-  //   const intervalId = setInterval(() => {
-  //     if (code !== undefined) {
-  //       resolve('Variable is set!');
-  //       clearInterval(intervalId);
-  //     }
-  //   }, 1000);
-  // }).then(console.log);
+  let code: string;
+  await new Promise((resolve) => {
+    const app = express();
+
+    app.post('/code', (req: any, res: any) => {
+      code = req.body.code;
+      res.send('Code received');
+    });
+
+    const server = app.listen(3000, () => console.log('Running…'));
+
+    setInterval(
+      () =>
+        server.getConnections((err, connections) =>
+          console.log(`${connections} connections currently open`)
+        ),
+      1000
+    );
+
+    process.on('SIGTERM', shutDown);
+    process.on('SIGINT', shutDown);
+
+    let connections: any = [];
+
+    server.on('connection', (connection) => {
+      connections.push(connection);
+      connection.on(
+        'close',
+        () =>
+          (connections = connections.filter((curr: any) => curr !== connection))
+      );
+    });
+
+    function shutDown() {
+      console.log('Received kill signal, shutting down gracefully');
+      server.close(() => {
+        console.log('Closed out remaining connections');
+        process.exit(0);
+      });
+
+      setTimeout(() => {
+        console.error(
+          'Could not close connections in time, forcefully shutting down'
+        );
+        process.exit(1);
+      }, 10000);
+
+      connections.forEach((curr: any) => curr.end());
+      setTimeout(
+        () => connections.forEach((curr: any) => curr.destroy()),
+        5000
+      );
+    }
+
+    const intervalId = setInterval(async () => {
+      if (code !== undefined) {
+        await shutDown();
+        resolve('Variable is set!');
+        clearInterval(intervalId);
+      }
+    }, 1000);
+  }).then(console.log);
 
   // use the code received from the POST request
-  await page.keyboard.type(code, { delay: 100 });
+  await page.keyboard.type(code!, { delay: 100 });
 
   await page.click('button[type="submit"]');
 
