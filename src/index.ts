@@ -6,11 +6,6 @@ import puppeteer from 'puppeteer';
 dotenv.config();
 import express from 'express';
 
-cron.schedule(`0 12 * * *`, async () => {
-  console.log(chalk.bold('Cron task initiated'));
-  run();
-});
-
 const GITHUB_LOGIN_URL = `${process.env.GITHUB_URL!}/login`;
 const GITHUB_REPO_URL = `${process.env.GITHUB_URL!}/${process.env
   .GITHUB_USERNAME!}/${process.env.GITHUB_REPO!}/new/main`;
@@ -33,14 +28,14 @@ async function auth() {
     page.waitForNavigation(),
     page.click('input[type="submit"]'),
   ]);
-  // remove readline related code
 
   let code: string;
   await new Promise((resolve) => {
     const app = express();
 
     app.post('/code', (req: any, res: any) => {
-      code = req.body.code;
+      console.log(req.query);
+      code = req.query.code;
       res.send('Code received');
     });
 
@@ -166,3 +161,8 @@ async function run() {
 auth()
   .then(() => run())
   .catch(console.error);
+
+cron.schedule('0 12 * * *', async () => {
+  console.log('Starting daily Cron job.');
+  run();
+});
