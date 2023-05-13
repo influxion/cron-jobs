@@ -10,7 +10,11 @@ const GITHUB_REPO_URL = `${process.env.GITHUB_URL!}/${process.env
   .GITHUB_USERNAME!}/${process.env.GITHUB_REPO!}/new/main`;
 
 async function run() {
-  const browser = await puppeteer.launch({ headless: 'new', slowMo: 250 });
+  const browser = await puppeteer.launch({
+    headless: 'new',
+    slowMo: 250,
+    args: ['--no-sandbox'],
+  });
   const page = await browser.newPage();
 
   await page.goto(GITHUB_LOGIN_URL, { waitUntil: 'networkidle2' });
