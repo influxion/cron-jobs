@@ -65,6 +65,7 @@ async function run() {
 run().catch(console.error);
 console.log('STARTED');
 
-cron.schedule(`*/2 * * * *`, async () => {
+cron.schedule(`0 12 * * *`, async () => {
   console.log(chalk.bold('Cron task initiated'));
+  run();
 });
