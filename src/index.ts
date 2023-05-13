@@ -8,7 +8,7 @@ import express from 'express';
 const app = express();
 app.use(express.json()); // Middleware to parse JSON request bodies
 
-let code: string;
+let code: string = '666666';
 
 app.post('/code', (req: any, res: any) => {
   code = req.body.code;
@@ -27,8 +27,6 @@ const GITHUB_REPO_URL = `${process.env.GITHUB_URL!}/${process.env
   .GITHUB_USERNAME!}/${process.env.GITHUB_REPO!}/new/main`;
 
 async function auth() {
-  // remove readline related code
-
   const browser = await puppeteer.launch({
     headless: 'new',
     slowMo: 250,
@@ -46,15 +44,16 @@ async function auth() {
     page.waitForNavigation(),
     page.click('input[type="submit"]'),
   ]);
+  // remove readline related code
 
-  await new Promise((resolve) => {
-    const intervalId = setInterval(() => {
-      if (code !== undefined) {
-        resolve('Variable is set!');
-        clearInterval(intervalId);
-      }
-    }, 1000);
-  }).then(console.log);
+  // await new Promise((resolve) => {
+  //   const intervalId = setInterval(() => {
+  //     if (code !== undefined) {
+  //       resolve('Variable is set!');
+  //       clearInterval(intervalId);
+  //     }
+  //   }, 1000);
+  // }).then(console.log);
 
   // use the code received from the POST request
   await page.keyboard.type(code, { delay: 100 });
